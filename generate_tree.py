@@ -1,0 +1,73 @@
+import subprocess
+import argparse
+import re
+import os
+from datetime import datetime
+
+def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_rate, sampling_fraction, mutation_rate):
+    # Construct the directory name with date and parameters
+    date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    param_str = (
+        f"species{num_species}_trees{num_trees}_seed{seed}_"
+        f"birthrate{birth_rate}_deathrate{death_rate}_"
+        f"samplingfraction{sampling_fraction}_mutationrate{mutation_rate}"
+    )
+    output_dir = os.path.join("data", f"date_{date_str}_{param_str}")
+    
+    # Create the output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    output_file = os.path.join(output_dir, "tree.nwk")
+
+    # Construct the input string for evolver
+    input_str = f"2\n{num_species}\n{num_trees} {seed}\n1\n{birth_rate} {death_rate} {sampling_fraction} {mutation_rate}\n0\n"
+    
+    # evolver needs to be run in a directory with MCbase.dat
+    work_dir = "/Users/mrzi/Documents/software/paml4/paml/examples/"
+    
+    try:
+        process = subprocess.Popen(
+            [evolver_path],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=work_dir
+        )
+        stdout, stderr = process.communicate(input=input_str)
+        
+        # Regex to find the Newick string
+        tree_matches = re.findall(r'(\(.*\);)', stdout)
+        
+        if tree_matches:
+            # Create a separate file for each tree
+            for i, tree in enumerate(tree_matches):
+                tree_filename = f"tree_{i+1}.nwk"
+                tree_path = os.path.join(output_dir, tree_filename)
+                with open(tree_path, 'w') as f:
+                    f.write(tree + '\n')
+            
+            print(f"Successfully extracted {len(tree_matches)} tree(s) as separate files in {output_dir}")
+        else:
+            print("Failed to find Newick tree in output.")
+            print("Stdout:", stdout)
+            
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run PAML evolver to generate a rooted tree.")
+    parser.add_argument("--evolver", default="/Users/mrzi/Documents/software/paml4/paml/src/evolver", help="Path to evolver binary")
+    parser.add_argument("--species", type=int, default=10, help="Number of species")
+    parser.add_argument("--trees", type=int, default=1, help="Number of trees")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--birth", type=float, default=1.0, help="Birth rate")
+    parser.add_argument("--death", type=float, default=2.0, help="Death rate")
+    parser.add_argument("--sampling", type=float, default=0.5, help="Sampling fraction")
+    parser.add_argument("--mutation", type=float, default=1.0, help="Mutation rate (tree height)")
+
+    args = parser.parse_args()
+
+    run_evolver(
+        args.evolver, args.species, args.trees, args.seed, 
+        args.birth, args.death, args.sampling, args.mutation
+    )
