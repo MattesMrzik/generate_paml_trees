@@ -57,20 +57,23 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
                 if visualize and HAS_TOYTREE:
                     try:
                         tree = toytree.tree(tree_str)
-                        # Set explicit width and height.
+                        # Increased width and height for better resolution and readability.
+                        # Added node_sizes and node_labels_style for clearer labels.
                         canvas, axes, mark = tree.draw(
-                            width=400, 
-                            height=400, 
+                            width=800, 
+                            height=800, 
                             node_labels=True,
+                            node_sizes=15,
+                            node_labels_style={"font-size": "12px"},
                             tip_labels_colors="black"
                         )
                         # Set white background on the canvas
                         canvas.style = {"background-color": "white"}
                         
-                        # Save only as PNG
+                        # Save as PNG with higher resolution (scale increases the pixel density)
                         png_path = os.path.join(output_dir, f"tree_{tree_index}.png")
-                        toyplot.png.render(canvas, png_path)
-                        print(f"Generated visualization: {png_path}")
+                        toyplot.png.render(canvas, png_path, scale=2.0)
+                        print(f"Generated high-resolution visualization: {png_path}")
                     except Exception as vis_e:
                         print(f"Could not visualize tree {tree_index}: {vis_e}")
             
