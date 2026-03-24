@@ -5,9 +5,7 @@ import os
 from datetime import datetime
 try:
     import toytree
-    import toyplot.pdf
     import toyplot.png
-    import toyplot.browser
     HAS_TOYTREE = True
 except ImportError:
     HAS_TOYTREE = False
@@ -40,6 +38,7 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
             text=True,
             cwd=work_dir
         )
+        print(f"Running evolver with input:\n{repr(input_str)}")
         stdout, _ = process.communicate(input=input_str)
         
         # Regex to find the Newick string
@@ -66,7 +65,7 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
                     canvas = toyplot.Canvas(width=cols*400, height=rows*400, style={"background-color": "white"})
                     
                     for i in range(num_to_viz):
-                        r, c = divmod(i, 3)
+                        # r, c = divmod(i, 3)
                         tree = toytree.tree(tree_matches[i])
                         axes = canvas.cartesian(grid=(rows, cols, i))
                         axes.show = False # Hide axes
@@ -80,7 +79,7 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
                     # Save the grid as a single PNG
                     grid_png_path = os.path.join(output_dir, "trees_grid.png")
                     toyplot.png.render(canvas, grid_png_path, scale=2.0)
-                    print(f"Generated high-resolution grid visualization (first {num_to_viz} trees): {grid_png_path}")
+                    print(f"Generated  grid visualization (first {num_to_viz} trees): {grid_png_path}")
                     
                 except Exception as vis_e:
                     print(f"Could not visualize trees grid: {vis_e}")
