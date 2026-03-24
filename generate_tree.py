@@ -58,13 +58,12 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
                     try:
                         tree = toytree.tree(tree_str)
                         # Increased width and height for better resolution and readability.
-                        # Added node_sizes and node_labels_style for clearer labels.
+                        # node_labels=False removes internal node labels.
                         canvas, axes, mark = tree.draw(
                             width=800, 
                             height=800, 
-                            node_labels=True,
-                            node_sizes=15,
-                            node_labels_style={"font-size": "12px"},
+                            node_labels=False,
+                            node_sizes=5,
                             tip_labels_colors="black"
                         )
                         # Set white background on the canvas
