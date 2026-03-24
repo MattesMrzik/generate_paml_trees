@@ -57,21 +57,19 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
                 if visualize and HAS_TOYTREE:
                     try:
                         tree = toytree.tree(tree_str)
-                        # The IDE error regarding tip_labels_colors can sometimes be resolved 
-                        # by explicitly setting it to a value rather than leaving it to the default.
-                        canvas, _, _ = tree.draw(
+                        # Set explicit width and height.
+                        canvas, axes, mark = tree.draw(
                             width=400, 
                             height=400, 
                             node_labels=True,
                             tip_labels_colors="black"
                         )
+                        # Set white background on the canvas
+                        canvas.style = {"background-color": "white"}
                         
-                        # Save as PNG and PDF
+                        # Save only as PNG
                         png_path = os.path.join(output_dir, f"tree_{tree_index}.png")
-                        pdf_path = os.path.join(output_dir, f"tree_{tree_index}.pdf")
-                        
                         toyplot.png.render(canvas, png_path)
-                        toyplot.pdf.render(canvas, pdf_path)
                         print(f"Generated visualization: {png_path}")
                     except Exception as vis_e:
                         print(f"Could not visualize tree {tree_index}: {vis_e}")
