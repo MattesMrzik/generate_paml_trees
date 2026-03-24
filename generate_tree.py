@@ -3,8 +3,15 @@ import argparse
 import re
 import os
 from datetime import datetime
+try:
+    import toytree
+    import toyplot.pdf
+    import toyplot.png
+    HAS_TOYTREE = True
+except ImportError:
+    HAS_TOYTREE = False
 
-def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_rate, sampling_fraction, mutation_rate):
+def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_rate, sampling_fraction, mutation_rate, visualize):
     # Construct the directory name with date and parameters
     date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
     param_str = (
@@ -16,7 +23,6 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
     
     # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, "tree.nwk")
 
     # Construct the input string for evolver
     input_str = f"2\n{num_species}\n{num_trees} {seed}\n1\n{birth_rate} {death_rate} {sampling_fraction} {mutation_rate}\n0\n"
@@ -33,18 +39,42 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
             text=True,
             cwd=work_dir
         )
-        stdout, stderr = process.communicate(input=input_str)
+        stdout, _ = process.communicate(input=input_str)
         
         # Regex to find the Newick string
         tree_matches = re.findall(r'(\(.*\);)', stdout)
         
         if tree_matches:
             # Create a separate file for each tree
-            for i, tree in enumerate(tree_matches):
-                tree_filename = f"tree_{i+1}.nwk"
+            for i, tree_str in enumerate(tree_matches):
+                tree_index = i + 1
+                tree_filename = f"tree_{tree_index}.nwk"
                 tree_path = os.path.join(output_dir, tree_filename)
                 with open(tree_path, 'w') as f:
-                    f.write(tree + '\n')
+                    f.write(tree_str + '\n')
+                
+                # Visualization
+                if visualize and HAS_TOYTREE:
+                    try:
+                        tree = toytree.tree(tree_str)
+                        # The IDE error regarding tip_labels_colors can sometimes be resolved 
+                        # by explicitly setting it to a value rather than leaving it to the default.
+                        canvas, _, _ = tree.draw(
+                            width=400, 
+                            height=400, 
+                            node_labels=True,
+                            tip_labels_colors="black"
+                        )
+                        
+                        # Save as PNG and PDF
+                        png_path = os.path.join(output_dir, f"tree_{tree_index}.png")
+                        pdf_path = os.path.join(output_dir, f"tree_{tree_index}.pdf")
+                        
+                        toyplot.png.render(canvas, png_path)
+                        toyplot.pdf.render(canvas, pdf_path)
+                        print(f"Generated visualization: {png_path}")
+                    except Exception as vis_e:
+                        print(f"Could not visualize tree {tree_index}: {vis_e}")
             
             print(f"Successfully extracted {len(tree_matches)} tree(s) as separate files in {output_dir}")
         else:
@@ -64,10 +94,12 @@ if __name__ == "__main__":
     parser.add_argument("--death", type=float, default=2.0, help="Death rate")
     parser.add_argument("--sampling", type=float, default=0.5, help="Sampling fraction")
     parser.add_argument("--mutation", type=float, default=1.0, help="Mutation rate (tree height)")
+    parser.add_argument("--visualize", action="store_true", help="Generate PNG/PDF visualizations of the trees")
 
     args = parser.parse_args()
 
     run_evolver(
         args.evolver, args.species, args.trees, args.seed, 
-        args.birth, args.death, args.sampling, args.mutation
+        args.birth, args.death, args.sampling, args.mutation,
+        args.visualize
     )

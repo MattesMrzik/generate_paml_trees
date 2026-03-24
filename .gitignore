@@ -1,3 +1,6 @@
 data/
 *.nwk
+*.png
+*.pdf
 __pycache__/
+venv/
