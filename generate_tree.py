@@ -7,6 +7,7 @@ try:
     import toytree
     import toyplot.pdf
     import toyplot.png
+    import toyplot.browser
     HAS_TOYTREE = True
 except ImportError:
     HAS_TOYTREE = False
@@ -52,29 +53,37 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
                 tree_path = os.path.join(output_dir, tree_filename)
                 with open(tree_path, 'w') as f:
                     f.write(tree_str + '\n')
-                
-                # Visualization
-                if visualize and HAS_TOYTREE:
-                    try:
-                        tree = toytree.tree(tree_str)
-                        # Increased width and height for better resolution and readability.
-                        # node_labels=False removes internal node labels.
-                        canvas, axes, mark = tree.draw(
-                            width=800, 
-                            height=800, 
+            
+            # Visualization
+            if visualize and HAS_TOYTREE:
+                try:
+                    num_to_viz = min(len(tree_matches), 9)
+                    
+                    # Create a 3x3 grid (or smaller if fewer trees)
+                    rows = (num_to_viz + 2) // 3
+                    cols = min(num_to_viz, 3)
+                    
+                    canvas = toyplot.Canvas(width=cols*400, height=rows*400, style={"background-color": "white"})
+                    
+                    for i in range(num_to_viz):
+                        r, c = divmod(i, 3)
+                        tree = toytree.tree(tree_matches[i])
+                        axes = canvas.cartesian(grid=(rows, cols, i))
+                        axes.show = False # Hide axes
+                        tree.draw(
+                            axes=axes,
                             node_labels=False,
                             node_sizes=5,
                             tip_labels_colors="black"
                         )
-                        # Set white background on the canvas
-                        canvas.style = {"background-color": "white"}
-                        
-                        # Save as PNG with higher resolution (scale increases the pixel density)
-                        png_path = os.path.join(output_dir, f"tree_{tree_index}.png")
-                        toyplot.png.render(canvas, png_path, scale=2.0)
-                        print(f"Generated high-resolution visualization: {png_path}")
-                    except Exception as vis_e:
-                        print(f"Could not visualize tree {tree_index}: {vis_e}")
+                    
+                    # Save the grid as a single PNG
+                    grid_png_path = os.path.join(output_dir, "trees_grid.png")
+                    toyplot.png.render(canvas, grid_png_path, scale=2.0)
+                    print(f"Generated high-resolution grid visualization (first {num_to_viz} trees): {grid_png_path}")
+                    
+                except Exception as vis_e:
+                    print(f"Could not visualize trees grid: {vis_e}")
             
             print(f"Successfully extracted {len(tree_matches)} tree(s) as separate files in {output_dir}")
         else:
