@@ -12,13 +12,13 @@ except ImportError:
 
 def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_rate, sampling_fraction, mutation_rate, visualize):
     # Construct the directory name with date and parameters
-    date_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    date_str = datetime.now().strftime("%Y%m%d-%H%M%S")
     param_str = (
         f"species{num_species}_trees{num_trees}_seed{seed}_"
         f"birthrate{birth_rate}_deathrate{death_rate}_"
         f"samplingfraction{sampling_fraction}_mutationrate{mutation_rate}"
     )
-    output_dir = os.path.join("data", f"date_{date_str}_{param_str}")
+    output_dir = os.path.join("data", f"date{date_str}_{param_str}")
     
     # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
