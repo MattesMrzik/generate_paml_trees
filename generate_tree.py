@@ -10,7 +10,7 @@ try:
 except ImportError:
     HAS_TOYTREE = False
 
-def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_rate, sampling_fraction, mutation_rate, visualize):
+def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_rate, sampling_fraction, mutation_rate):
     # Construct the directory name with date and parameters
     date_str = datetime.now().strftime("%Y%m%d-%H%M%S")
     param_str = (
@@ -54,7 +54,7 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
                     f.write(tree_str + '\n')
             
             # Visualization
-            if visualize and HAS_TOYTREE:
+            if HAS_TOYTREE:
                 try:
                     num_to_viz = min(len(tree_matches), 9)
                     
@@ -102,12 +102,10 @@ if __name__ == "__main__":
     parser.add_argument("--death", type=float, default=2.0, help="Death rate")
     parser.add_argument("--sampling", type=float, default=0.5, help="Sampling fraction")
     parser.add_argument("--mutation", type=float, default=1.0, help="Mutation rate (tree height)")
-    parser.add_argument("--visualize", action="store_true", help="Generate PNG/PDF visualizations of the trees")
 
     args = parser.parse_args()
 
     run_evolver(
         args.evolver, args.species, args.trees, args.seed, 
-        args.birth, args.death, args.sampling, args.mutation,
-        args.visualize
+        args.birth, args.death, args.sampling, args.mutation
     )
