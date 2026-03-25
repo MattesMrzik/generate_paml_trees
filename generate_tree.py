@@ -40,10 +40,15 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
             cwd=work_dir
         )
         print(f"Running evolver with input:\n{repr(input_str)}")
-        stdout, _ = process.communicate(input=input_str)
+        process.communicate(input=input_str)
         
+        # Read Newick strings from evolver.out instead of stdout
+        evolver_out_path = os.path.join(work_dir, "evolver.out")
+        with open(evolver_out_path, 'r') as f:
+            evolver_out_content = f.read()
+            
         # Regex to find the Newick string
-        tree_matches = re.findall(r'(\(.*\);)', stdout)
+        tree_matches = re.findall(r'(\(.*\);)', evolver_out_content)
         
         if tree_matches:
             # Create a separate file for each tree
@@ -91,8 +96,8 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
             
             print(f"Successfully extracted {len(tree_matches)} tree(s) as separate files in {output_dir}")
         else:
-            print("Failed to find Newick tree in output.")
-            print("Stdout:", stdout)
+            print("Failed to find Newick tree in evolver.out.")
+            print("Content of evolver.out:", evolver_out_content)
             
     except Exception as e:
         print(f"An error occurred: {e}")
