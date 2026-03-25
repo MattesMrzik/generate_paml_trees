@@ -6,11 +6,12 @@ from datetime import datetime
 try:
     import toytree
     import toyplot.png
+    import toyplot.browser
     HAS_TOYTREE = True
 except ImportError:
     HAS_TOYTREE = False
 
-def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_rate, sampling_fraction, mutation_rate):
+def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_rate, sampling_fraction, mutation_rate, show_plot):
     # Construct the directory name with date and parameters
     date_str = datetime.now().strftime("%Y%m%d-%H%M%S")
     param_str = (
@@ -81,6 +82,10 @@ def run_evolver(evolver_path, num_species, num_trees, seed, birth_rate, death_ra
                     toyplot.png.render(canvas, grid_png_path, scale=2.0)
                     print(f"Generated  grid visualization (first {num_to_viz} trees): {grid_png_path}")
                     
+                    # Optionally show the plot in a browser
+                    if show_plot:
+                        toyplot.browser.show(canvas)
+                    
                 except Exception as vis_e:
                     print(f"Could not visualize trees grid: {vis_e}")
             
@@ -102,10 +107,12 @@ if __name__ == "__main__":
     parser.add_argument("--death", type=float, default=2.0, help="Death rate")
     parser.add_argument("--sampling", type=float, default=0.5, help="Sampling fraction")
     parser.add_argument("--mutation", type=float, default=1.0, help="Mutation rate (tree height)")
+    parser.add_argument("--show", action="store_true", help="Automatically open the generated plot in a web browser")
 
     args = parser.parse_args()
 
     run_evolver(
         args.evolver, args.species, args.trees, args.seed, 
-        args.birth, args.death, args.sampling, args.mutation
+        args.birth, args.death, args.sampling, args.mutation,
+        args.show
     )
